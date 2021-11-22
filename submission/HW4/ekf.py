@@ -508,10 +508,7 @@ class EkfSlam(Ekf):
             # HINT: The first two map lines (j=0,1) are fixed so the Jacobian of h wrt the alpha and r for those lines is just 0. 
             # HINT: For the other map lines (j>2), write out h in terms of alpha and r to get the Jacobian Hx.
             line = self.x[3 + 2 * j: 5 + 2 * j]
-            state = self.x[:3]
-            h, temp_hx = tb.transform_line_to_scanner_frame(line, state, self.tf_base_to_camera)
-
-            
+            h, temp_hx = tb.transform_line_to_scanner_frame(line, self.x[:3], self.tf_base_to_camera)
             # 2 x 2
 
             #       alpha   r

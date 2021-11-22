@@ -25,8 +25,8 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
     x, y, theta = xvec
     new_theta = theta + w * dt
     if abs(w) > EPSILON_OMEGA: # Make EPSILON OMEGA
-        # CORRECT.
-        
+
+
         cos_theta_sub = np.cos(new_theta) - np.cos(theta)
         sin_theta_sub = np.sin(new_theta) - np.sin(theta)
         
@@ -35,12 +35,9 @@ def compute_dynamics(xvec, u, dt, compute_jacobians=True):
         Gx = np.array([[1, 0, (cos_theta_sub) * V / w ], [0, 1, (sin_theta_sub) * V / w], [0, 0, 1]])
         Gu = np.array([[(sin_theta_sub) / w, (-V * (sin_theta_sub) / (w ** 2)) + (V * np.cos(new_theta) * dt) / w], [-(cos_theta_sub) / w, -V * (cos_theta_sub) / w ** 2 + (V * (-np.sin(new_theta)) * dt) / w], [0, dt]])
     else:
-
-        # first term of g is correct.
-
-        g = np.array([x + np.cos(new_theta) * dt * V, y + np.sin(new_theta) * V * dt, theta])
-        Gx = np.array([[1, 0, -V * dt * np.sin(new_theta)], [0, 1, V * dt * np.cos(new_theta)], [0, 0, 1]] )
-        Gu = np.array([[np.cos(new_theta) * dt , -V/2 * np.sin(new_theta) * dt ** 2 ], [np.sin(theta) * dt, V / 2 * np.cos(new_theta) * dt ** 2], [0, dt]])
+        g = np.array([x,y, theta])
+        Gx = np.array([[1, 0, np.cos(theta) * V], [0, 1, V * np.sin(theta)], [0, 0, 1]] )
+        Gu = np.array([[np.sin(theta), 0], [-np.cos(theta), 0], [0, 0]])
         # derive with resp to w = 0 in this case -> TODO we don't know what else it should be. 
         
      
@@ -75,35 +72,27 @@ def transform_line_to_scanner_frame(line, x, tf_base_to_camera, compute_jacobian
 
     ########## Code starts here ##########
     # TODO: Compute h, Hx
-    # HINT: Calculate the pose of the camera in the world frame (x_cam, y_cam, th_cam), 
-    # a rotation matrix may be useful.
+    # HINT: Calculate the pose of the camera in the world frame (x_cam, y_cam, th_cam), a rotation matrix may be useful.
     # HINT: To compute line parameters in the camera frame h = (alpha_in_cam, r_in_cam), 
     #       draw a diagram with a line parameterized by (alpha,r) in the world frame and 
     #       a camera frame with origin at x_cam, y_cam rotated by th_cam wrt to the world frame
     # HINT: What is the projection of the camera location (x_cam, y_cam) on the line r? 
-    # HINT: To find Hx, write h in terms of the pose of the base in world frame 
-    # (x_base, y_base, th_base)
+    # HINT: To find Hx, write h in terms of the pose of the base in world frame (x_base, y_base, th_base)
     cam_world = np.zeros_like(tf_base_to_camera)
     
     rotation_matrix = np.array([[np.cos(x[2]), -np.sin(x[2])],
                                 [np.sin(x[2]), np.cos(x[2])]])
     
-
-    # rotating base of camera based on theta in x, theta in world frame.
     cam_world = np.dot(rotation_matrix, tf_base_to_camera[:2])
-
-    # tack on the yaw of the camera at the end.
     cam_world = np.append(cam_world, tf_base_to_camera[2])
     
-    # we translate this thing by x.
     cam_world += x
-    
     
     x_cam, y_cam, th_cam = cam_world
     
     h = np.zeros_like(line)
     h[0] = alpha - th_cam
-    h[1] = r- np.cos(alpha - th_cam) * np.sqrt(x_cam ** 2 + y_cam ** 2)
+    h[1] = r - np.cos(alpha - th_cam) * np.sqrt(x_cam ** 2 + y_cam ** 2)
     
     
     
